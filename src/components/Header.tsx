@@ -22,6 +22,7 @@ interface HeaderProps {
   cartCount?: number;
   onChangeTab?: (tab: TabType) => void;
   unreadNotificationCount?: number;
+  dbConnected?: boolean;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -44,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   cartCount = 0,
   onChangeTab,
   unreadNotificationCount = 0,
+  dbConnected,
 }) => {
   const isSubScreen = activeScreen !== 'main';
 
@@ -128,6 +130,19 @@ export const Header: React.FC<HeaderProps> = ({
                 <span className="font-rubik text-[14px] sm:text-[16px] text-[#7b2cbf] font-extrabold tracking-tight truncate leading-tight">
                   {userRole === 'admin' ? 'Maraña Admin' : 'Maraña'}
                 </span>
+                {dbConnected !== undefined && (
+                  <span
+                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-semibold border ${
+                      dbConnected
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                    }`}
+                    title={dbConnected ? 'Base de datos MySQL (XAMPP) conectada' : 'Modo local sin conexión MySQL'}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${dbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                    <span className="hidden xs:inline">{dbConnected ? 'MySQL XAMPP' : 'Offline'}</span>
+                  </span>
+                )}
               </div>
               <span className="text-[9.5px] sm:text-[11px] text-[#6f5092] uppercase tracking-wider truncate leading-tight font-semibold hidden sm:block">
                 {getSubtitle()}

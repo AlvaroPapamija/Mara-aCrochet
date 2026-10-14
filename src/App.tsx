@@ -20,6 +20,17 @@ import { EditarStockView } from './views/EditarStockView';
 import { PedidosView } from './views/PedidosView';
 import { GuiaDespachoView } from './views/GuiaDespachoView';
 import { CatalogoView } from './views/CatalogoView';
+import {
+  checkDatabaseStatus,
+  getProductsFromApi,
+  getOrdersFromApi,
+  getVouchersFromApi,
+  updateProductStockInApi,
+  createOrderInApi,
+  createVoucherInApi,
+  updateVoucherStatusInApi,
+  updateOrderInApi,
+} from './services/apiService';
 
 export default function App() {
   // Default to Client account so the initial experience is purely the public boutique catalog
@@ -110,6 +121,32 @@ export default function App() {
       setToast((prev) => ({ ...prev, visible: false }));
     }, 3500);
   };
+
+  const [dbConnected, setDbConnected] = useState<boolean>(false);
+
+  // Sincronizar datos iniciales con la base de datos MySQL en XAMPP
+  useEffect(() => {
+    async function syncDatabase() {
+      const status = await checkDatabaseStatus();
+      setDbConnected(status.connected);
+      if (status.connected) {
+        showToast(
+          'MySQL (XAMPP) Conectado',
+          `Base de datos '${status.database}' lista en localhost.`,
+          'database'
+        );
+        const [apiProds, apiOrds, apiVouchs] = await Promise.all([
+          getProductsFromApi(),
+          getOrdersFromApi(),
+          getVouchersFromApi(),
+        ]);
+        if (apiProds && apiProds.length > 0) setProducts(apiProds);
+        if (apiOrds && apiOrds.length > 0) setOrders(apiOrds);
+        if (apiVouchs && apiVouchs.length > 0) setVouchers(apiVouchs);
+      }
+    }
+    syncDatabase();
+  }, []);
 
   // Authentication handlers
   const handleLogin = (account: UserAccount) => {
@@ -290,6 +327,10 @@ export default function App() {
     setVouchers([newVoucher, ...vouchers]);
     setCart([]);
 
+    // Persistir nuevo pedido y comprobante en MySQL (XAMPP)
+    createOrderInApi(newOrder);
+    createVoucherInApi(newVoucher);
+
     // Notificar al navegador de la clienta
     notifyOrderStatus(
       newOrder,
@@ -302,6 +343,7 @@ export default function App() {
     if (selectedOrder.id === updatedOrder.id) {
       setSelectedOrder(updatedOrder);
     }
+    updateOrderInApi(updatedOrder);
   };
 
   // Open sub-screens
@@ -351,6 +393,8 @@ export default function App() {
       'Pago registrado con éxito. Pedido listo para preparación.',
       'verified'
     );
+    // Sincronizar en base de datos MySQL (XAMPP)
+    updateVoucherStatusInApi(voucherId, 'aprobado');
   };
 
   const handleApproveVoucher = (voucherId: string) => {
@@ -361,6 +405,7 @@ export default function App() {
     setVouchers((prev) =>
       prev.map((v) => (v.id === voucherId ? { ...v, status: 'rechazado' } : v))
     );
+    updateVoucherStatusInApi(voucherId, 'rechazado', _reason);
   };
 
   const handleUpdateStockQty = (sku: string, newQty: number) => {
@@ -392,6 +437,8 @@ export default function App() {
 
   const handleSaveStockFromEditor = (sku: string, newStock: number) => {
     handleUpdateStockQty(sku, newStock);
+    // Sincronizar stock en MySQL (XAMPP)
+    updateProductStockInApi(sku, newStock);
   };
 
   const handleMarkDispatched = (orderId: string) => {
@@ -476,6 +523,7 @@ export default function App() {
         activeScreen={activeScreen}
         userRole={userRole}
         currentUser={currentUser}
+        dbConnected={dbConnected}
         onToggleRole={handleToggleRole}
         screenTitle={getScreenTitle()}
         onBack={() => setActiveScreen('main')}

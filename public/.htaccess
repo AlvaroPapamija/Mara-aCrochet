@@ -1,0 +1,12 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /marana-crochet/
+
+  # Dejar pasar solicitudes a la carpeta api
+  RewriteRule ^api/ - [L]
+
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /marana-crochet/index.html [L]
+</IfModule>
