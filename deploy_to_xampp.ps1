@@ -62,6 +62,9 @@ if (-not (Test-Path $htdocsTarget)) {
 Copy-Item -Path "$PSScriptRoot\dist\*" -Destination $htdocsTarget -Recurse -Force
 New-Item -ItemType Directory -Force -Path "$htdocsTarget\api" | Out-Null
 Copy-Item -Path "$PSScriptRoot\api\*" -Destination "$htdocsTarget\api\" -Recurse -Force
+Copy-Item -Path "$PSScriptRoot\*.php" -Destination "$htdocsTarget\" -Force
+New-Item -ItemType Directory -Force -Path "$htdocsTarget\includes" | Out-Null
+Copy-Item -Path "$PSScriptRoot\includes\*" -Destination "$htdocsTarget\includes\" -Recurse -Force
 
 Write-Host "==========================================================" -ForegroundColor Green
 Write-Host "   ¡DESPLIEGUE COMPLETADO CON ÉXITO!" -ForegroundColor Green
